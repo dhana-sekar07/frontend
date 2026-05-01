@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StaffFlow — Staff Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #13161e;
+  --bg3: #1a1e29;
+  --card: #1e2330;
+  --card2: #252b3b;
+  --border: #2a3147;
+  --accent: #00e5a0;
+  --accent2: #00b87a;
+  --accent-soft: rgba(0,229,160,0.12);
+  --accent-glow: rgba(0,229,160,0.25);
+  --red: #ff4d6d;
+  --red-soft: rgba(255,77,109,0.12);
+  --yellow: #ffd166;
+  --yellow-soft: rgba(255,209,102,0.12);
+  --blue: #4d9fff;
+  --blue-soft: rgba(77,159,255,0.12);
+  --text: #e8eaf0;
+  --text2: #8892aa;
+  --text3: #4a5268;
+  --font: 'Outfit', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --nav-h: 72px;
+  --header-h: 60px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-accent: 0 4px 24px rgba(0,229,160,0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── HEADER ── */
+.header {
+  height: var(--header-h);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-accent);
+}
+.logo-mark svg { width: 18px; height: 18px; }
+.logo-text {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.logo-text span { color: var(--accent); }
+.header-action {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all .2s;
+}
+.header-action:hover { background: var(--card2); border-color: var(--accent); }
+.header-action svg { width: 18px; height: 18px; stroke: var(--text2); }
+
+/* ── SCREENS ── */
+.screens-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 20px 16px calc(var(--nav-h) + 16px);
+  opacity: 0;
+  transform: translateX(40px);
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+.screen.prev {
+  transform: translateX(-40px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  height: var(--nav-h);
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .25s;
+  flex: 1;
+}
+.nav-item svg { width: 22px; height: 22px; stroke: var(--text3); transition: all .25s; }
+.nav-item span {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all .25s;
+}
+.nav-item.active { background: var(--accent-soft); }
+.nav-item.active svg { stroke: var(--accent); }
+.nav-item.active span { color: var(--accent); }
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.section-sub {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  box-shadow: var(--shadow-accent);
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-sm { padding: 7px 13px; font-size: 12px; border-radius: 9px; }
+.btn-ghost {
+  background: var(--card);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--card2); color: var(--text); }
+.btn-danger { background: var(--red-soft); color: var(--red); border: 1px solid rgba(255,77,109,0.2); }
+.btn svg { width: 15px; height: 15px; }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: all .2s;
+}
+.card:hover { border-color: var(--accent); background: var(--card2); }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge-green { background: var(--accent-soft); color: var(--accent); }
+.badge-red { background: var(--red-soft); color: var(--red); }
+.badge-yellow { background: var(--yellow-soft); color: var(--yellow); }
+.badge-blue { background: var(--blue-soft); color: var(--blue); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.form-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: all .2s;
+}
+.form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.form-input::placeholder { color: var(--text3); }
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.input-group { position: relative; }
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  stroke: var(--text3);
+  pointer-events: none;
+}
+.input-group .form-input { padding-left: 38px; }
+
+/* ── SEARCH BAR ── */
+.search-bar {
+  position: relative;
+  margin-bottom: 16px;
+}
+.search-bar svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  stroke: var(--text3);
+}
+.search-bar input {
+  width: 100%;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px 11px 42px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: all .2s;
+}
+.search-bar input:focus { border-color: var(--accent); }
+.search-bar input::placeholder { color: var(--text3); }
+
+/* ── FILTER CHIPS ── */
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text2);
+  transition: all .2s;
+  white-space: nowrap;
+}
+.chip.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 12px;
+  text-align: center;
+}
+.stat-num {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+.stat-label { font-size: 10px; color: var(--text2); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── DESIGNATION ITEM ── */
+.desig-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  gap: 12px;
+  transition: all .2s;
+  animation: slideIn .3s ease both;
+}
+.desig-item:hover { border-color: var(--accent); background: var(--card2); }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.desig-num {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+.desig-name { flex: 1; font-size: 14px; font-weight: 600; }
+.desig-count { font-size: 11px; color: var(--text2); margin-right: 8px; }
+.desig-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all .2s;
+  background: var(--bg3);
+}
+.icon-btn svg { width: 14px; height: 14px; }
+.icon-btn.edit svg { stroke: var(--blue); }
+.icon-btn.edit:hover { background: var(--blue-soft); }
+.icon-btn.del svg { stroke: var(--red); }
+.icon-btn.del:hover { background: var(--red-soft); }
+
+/* ── STAFF CARD ── */
+.staff-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  transition: all .25s;
+  animation: slideIn .3s ease both;
+}
+.staff-card:hover { border-color: var(--accent); background: var(--card2); }
+.staff-avatar {
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  background: var(--bg3);
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.staff-info { flex: 1; min-width: 0; }
+.staff-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.staff-desig { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.staff-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.staff-id { font-size: 10px; font-family: var(--mono); color: var(--text3); background: var(--bg3); padding: 2px 7px; border-radius: 4px; }
+.staff-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.toggle {
+  width: 38px; height: 22px;
+  border-radius: 11px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); box-shadow: var(--shadow-accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 1px; left: 1px;
+  transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle.on::after { transform: translateX(16px); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 430px;
+  padding: 24px 20px 36px;
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(0.32,0.72,0,1);
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.4px; }
+
+/* ── ADD STAFF FORM SECTIONS ── */
+.form-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.form-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── AVATAR UPLOAD ── */
+.avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.avatar-placeholder {
+  width: 80px; height: 80px;
+  border-radius: 24px;
+  background: var(--bg3);
+  border: 2px dashed var(--border);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all .2s;
+  overflow: hidden;
+  position: relative;
+}
+.avatar-placeholder:hover { border-color: var(--accent); }
+.avatar-placeholder svg { width: 28px; height: 28px; stroke: var(--text3); }
+.avatar-placeholder img { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+/* ── ROTA ── */
+.rota-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 14px;
+  flex: 1;
+}
+.week-label { flex: 1; text-align: center; font-size: 13px; font-weight: 600; }
+.week-btn {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all .2s;
+}
+.week-btn:hover { background: var(--accent-soft); }
+.week-btn svg { width: 14px; height: 14px; stroke: var(--text2); }
+.view-toggle {
+  display: flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.view-btn {
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text3);
+  transition: all .2s;
+}
+.view-btn.active { background: var(--accent); color: #000; }
+
+.rota-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.rota-grid::-webkit-scrollbar { display: none; }
+.rota-table { min-width: 600px; border-collapse: collapse; width: 100%; }
+.rota-table th {
+  padding: 8px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text2);
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.rota-table th:first-child { text-align: left; min-width: 110px; }
+.rota-table td {
+  padding: 6px 6px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+.rota-table tr:hover td { background: var(--card); }
+.rota-staff-cell { display: flex; align-items: center; gap: 8px; padding: 6px 2px; }
+.rota-avatar {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--bg3);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.rota-name { font-size: 12px; font-weight: 600; }
+.rota-desig { font-size: 10px; color: var(--text2); }
+.shift-cell { text-align: center; }
+.shift-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--accent-soft);
+  border: 1px solid rgba(0,229,160,0.2);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all .2s;
+  width: 54px;
+  line-height: 1.4;
+}
+.shift-badge:hover { background: var(--accent); color: #000; }
+.shift-badge.off {
+  background: var(--red-soft);
+  border-color: rgba(255,77,109,0.2);
+  color: var(--red);
+}
+.shift-badge.off:hover { background: var(--red); color: #fff; }
+.shift-badge.empty {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text3);
+}
+.shift-badge.empty:hover { border-color: var(--accent); color: var(--accent); }
+.shift-time { font-weight: 700; font-size: 10px; }
+.shift-type { font-size: 8px; opacity: 0.8; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  z-index: 1000;
+  opacity: 0;
+  transition: all .3s;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 360px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-icon { font-size: 16px; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text2);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-size: 14px; font-weight: 500; }
+
+/* ── RADIO GROUP ── */
+.radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.radio-option { display: none; }
+.radio-label {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  transition: all .2s;
+}
+.radio-option:checked + .radio-label {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ── STEP INDICATOR ── */
+.step-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.step {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: all .3s;
+}
+.step.done { background: var(--accent); }
+.step-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+
+/* ── RESPONSIVE — lock max-width on desktop ── */
+@media (min-width: 430px) {
+  #app {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    box-shadow: 0 0 80px rgba(0,0,0,0.5);
+  }
+}
+
+/* ── ANIMATIONS ── */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  70% { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.pulse { animation: pulse-ring 2s infinite; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <span class="logo-text">Staff<span>Flow</span></span>
+    </div>
+    <div class="header-action" id="notifBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- SCREENS -->
+  <div class="screens-wrap">
+
+    <!-- ── DESIGNATIONS SCREEN ── -->
+    <div class="screen active" id="screen-desig">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Designations</div>
+          <div class="section-sub">Manage all job roles</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addDesigBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Role
+        </button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="desig-count">8</div>
+          <div class="stat-label">Roles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="staff-total">12</div>
+          <div class="stat-label">Staff</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--yellow)">3</div>
+          <div class="stat-label">Shifts</div>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search designations..." id="desigSearch">
+      </div>
+
+      <div id="desig-list"></div>
+    </div>
+
+    <!-- ── STAFF SCREEN ── -->
+    <div class="screen" id="screen-staff">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Staff</div>
+          <div class="section-sub">All team members</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addStaffNavBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add
+        </button>
+      </div>
+
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search staff..." id="staffSearch">
+      </div>
+
+      <div class="filter-chips" id="staffChips">
+        <div class="chip active" data-filter="all">All</div>
+        <div class="chip" data-filter="active">Active</div>
+        <div class="chip" data-filter="inactive">Inactive</div>
+      </div>
+
+      <div id="staff-list"></div>
+    </div>
+
+    <!-- ── ADD STAFF SCREEN ── -->
+    <div class="screen" id="screen-add">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Add Staff</div>
+          <div class="section-sub">New team member</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="backFromAddBtn">← Back</button>
+      </div>
+
+      <div class="step-label" id="stepLabel">Step 1 of 3 — Personal Info</div>
+      <div class="step-bar">
+        <div class="step done" id="step1"></div>
+        <div class="step" id="step2"></div>
+        <div class="step" id="step3"></div>
+      </div>
+
+      <!-- Step 1: Personal -->
+      <div id="addStep1">
+        <div class="avatar-upload">
+          <div class="avatar-placeholder" id="avatarPicker">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div style="font-size:12px;color:var(--text2)">Tap to upload photo</div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Personal Details</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name *</label>
+              <input class="form-input" id="staffFirstName" placeholder="John" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name *</label>
+              <input class="form-input" id="staffLastName" placeholder="Smith" type="text">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="input-group">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input class="form-input" id="staffEmail" placeholder="john@example.com" type="email">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <div class="input-group">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <input class="form-input" id="staffPhone" placeholder="+44 7700 900000" type="tel">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Postcode</label>
+            <input class="form-input" id="staffPostcode" placeholder="SW1A 1AA" type="text">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" id="nextStep1Btn">Continue →</button>
+      </div>
+
+      <!-- Step 2: Work -->
+      <div id="addStep2" style="display:none">
+        <div class="form-section">
+          <div class="form-section-title">Employment Details</div>
+          <div class="form-group">
+            <label class="form-label">Primary Designation *</label>
+            <select class="form-input form-select" id="staffDesig"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contract Type</label>
+            <select class="form-input form-select" id="staffContract">
+              <option value="">Select type</option>
+              <option>Full-time</option>
+              <option>Part-time</option>
+              <option>Zero Hours</option>
+              <option>Casual</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Contract Hrs</label>
+              <input class="form-input" id="staffHours" placeholder="40" type="number">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hourly Rate (£)</label>
+              <input class="form-input" id="staffRate" placeholder="12.50" type="number" step="0.01">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Joining Date</label>
+            <input class="form-input" id="staffJoinDate" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Eligibility to Work</label>
+            <div class="radio-group">
+              <input type="radio" name="elig" id="elig1" class="radio-option" value="No Restrictions" checked>
+              <label class="radio-label" for="elig1">No Restrictions</label>
+              <input type="radio" name="elig" id="elig2" class="radio-option" value="Restrictions">
+              <label class="radio-label" for="elig2">Restrictions</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">On Call</label>
+            <div class="radio-group">
+              <input type="radio" name="oncall" id="oc1" class="radio-option" value="No" checked>
+              <label class="radio-label" for="oc1">No</label>
+              <input type="radio" name="oncall" id="oc2" class="radio-option" value="Yes">
+              <label class="radio-label" for="oc2">Yes</label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" style="flex:1" id="backStep2Btn">← Back</button>
+          <button class="btn btn-primary" style="flex:2" id="nextStep2Btn">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Review -->
+      <div id="addStep3" style="display:none">
+        <div class="form-section" id="reviewCard">
+          <div class="form-section-title">Review Details</div>
+          <div id="reviewContent" style="font-size:14px;line-height:1.8;color:var(--text2)"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" style="flex:1" id="backStep3Btn">← Back</button>
+          <button class="btn btn-primary" style="flex:2" id="submitStaffBtn">✓ Add Staff Member</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ROTA SCREEN ── -->
+    <div class="screen" id="screen-rota">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Rota</div>
+          <div class="section-sub">Weekly schedule</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addShiftBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Shift
+        </button>
+      </div>
+
+      <div class="rota-controls">
+        <div class="week-nav">
+          <button class="week-btn" id="prevWeek">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+          <span class="week-label" id="weekLabel"></span>
+          <button class="week-btn" id="nextWeek">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
+          </button>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="staffViewBtn">Staff</button>
+          <button class="view-btn" id="shiftViewBtn">Shift</button>
+        </div>
+      </div>
+
+      <div class="rota-grid">
+        <table class="rota-table" id="rotaTable">
+          <thead><tr id="rotaHead"></tr></thead>
+          <tbody id="rotaBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /screens-wrap -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-screen="desig">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span>Roles</span>
+    </div>
+    <div class="nav-item" data-screen="staff">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span>Staff</span>
+    </div>
+    <div class="nav-item" data-screen="rota">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/>
+      </svg>
+      <span>Rota</span>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- MODALS -->
+<!-- Add Designation Modal -->
+<div class="modal-overlay" id="desigModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="desigModalTitle">Add Designation</div>
+    <div class="form-group">
+      <label class="form-label">Role Name *</label>
+      <input class="form-input" id="desigInput" placeholder="e.g. Senior Chef">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" id="cancelDesigBtn">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="saveDesigBtn">Save Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shift Modal -->
+<div class="modal-overlay" id="shiftModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Assign Shift</div>
+    <div class="form-group">
+      <label class="form-label">Staff Member</label>
+      <select class="form-input form-select" id="shiftStaff"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Day</label>
+      <select class="form-input form-select" id="shiftDay">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Time</label>
+        <input class="form-input" id="shiftStart" type="time" value="09:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Time</label>
+        <input class="form-input" id="shiftEnd" type="time" value="17:00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Shift Type</label>
+      <div class="radio-group">
+        <input type="radio" name="shiftType" id="st1" class="radio-option" value="Morning" checked>
+        <label class="radio-label" for="st1">Morning</label>
+        <input type="radio" name="shiftType" id="st2" class="radio-option" value="Afternoon">
+        <label class="radio-label" for="st2">Afternoon</label>
+        <input type="radio" name="shiftType" id="st3" class="radio-option" value="Night">
+        <label class="radio-label" for="st3">Night</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" id="cancelShiftBtn">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="saveShiftBtn">Save Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon">✓</span>
+  <span id="toastMsg">Saved!</span>
+</div>
+
+<script>
+// ── STATE ──
+let designations = [
+  { id:1, name:'Driver' },
+  { id:2, name:'Kitchen Assistant' },
+  { id:3, name:'Chef' },
+  { id:4, name:'Waiter / Waitress' },
+  { id:5, name:'Operator' },
+  { id:6, name:'Supervisor' },
+  { id:7, name:'Administrator' },
+  { id:8, name:'Restaurant Manager' }
+];
+
+let staffMembers = [
+  { id:1, first:'James', last:'Carter', email:'james@cafe.com', phone:'07700900001', desigId:3, contract:'Full-time', rate:14.50, joinDate:'2023-03-01', active:true, empId:'EMP001' },
+  { id:2, first:'Mary', last:'Johnson', email:'mary@cafe.com', phone:'07700900002', desigId:4, contract:'Part-time', rate:11.44, joinDate:'2024-05-01', active:true, empId:'EMP002' },
+  { id:3, first:'Alex', last:'Kim', email:'alex@cafe.com', phone:'07700900003', desigId:5, contract:'Zero Hours', rate:11.44, joinDate:'2024-01-15', active:false, empId:'EMP003' },
+  { id:4, first:'Sophie', last:'Nguyen', email:'sophie@cafe.com', phone:'07700900004', desigId:8, contract:'Full-time', rate:22.00, joinDate:'2022-11-01', active:true, empId:'EMP004' },
+  { id:5, first:'Rahul', last:'Patel', email:'rahul@cafe.com', phone:'07700900005', desigId:1, contract:'Full-time', rate:13.00, joinDate:'2023-07-20', active:true, empId:'EMP005' },
+];
+
+let rotaData = {};
+let currentWeekOffset = 0;
+let editDesigId = null;
+let currentStep = 1;
+let staffFilter = 'all';
+
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+// ── UTILS ──
+function showToast(msg, icon='✓') {
+  $('#toastMsg').text(msg);
+  $('.toast-icon').text(icon);
+  $('#toast').addClass('show');
+  setTimeout(() => $('#toast').removeClass('show'), 2800);
+}
+
+function getDesigName(id) {
+  const d = designations.find(x => x.id == id);
+  return d ? d.name : '—';
+}
+
+function getInitials(first, last) {
+  return ((first||'')[0]||'') + ((last||'')[0]||'');
+}
+
+function getWeekDates(offset) {
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - day + 1 + offset * 7);
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function fmt(d) {
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+
+// ── NAVIGATION ──
+function showScreen(name, prev=null) {
+  $('.screen').each(function() {
+    const $s = $(this);
+    const wasActive = $s.hasClass('active');
+    $s.removeClass('active prev');
+    if (wasActive && $s.attr('id') !== 'screen-' + name) $s.addClass('prev');
+  });
+  $('#screen-' + name).addClass('active');
+  $('.nav-item').removeClass('active');
+  if (['desig','staff','rota'].includes(name)) {
+    $(`.nav-item[data-screen="${name}"]`).addClass('active');
+  }
+}
+
+$('.nav-item').on('click', function() {
+  const s = $(this).data('screen');
+  showScreen(s);
+});
+
+$('#addStaffNavBtn').on('click', () => {
+  resetAddForm();
+  showScreen('add');
+});
+
+$('#backFromAddBtn').on('click', () => showScreen('staff'));
+
+// ── DESIGNATIONS ──
+function renderDesigs(filter='') {
+  const $list = $('#desig-list').empty();
+  const filtered = designations.filter(d => d.name.toLowerCase().includes(filter.toLowerCase()));
+  if (!filtered.length) {
+    $list.html('<div class="empty-state"><div class="empty-icon">🏷️</div><div class="empty-text">No designations found</div></div>');
+    return;
+  }
+  filtered.forEach((d, i) => {
+    const count = staffMembers.filter(s => s.desigId === d.id).length;
+    const $item = $(`
+      <div class="desig-item" style="animation-delay:${i*40}ms">
+        <div class="desig-num">${i+1}</div>
+        <div class="desig-name">${d.name}</div>
+        <div class="desig-count">${count} staff</div>
+        <div class="desig-actions">
+          <button class="icon-btn edit" data-id="${d.id}" title="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="icon-btn del" data-id="${d.id}" title="Delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `);
+    $list.append($item);
+  });
+  $('#desig-count').text(designations.length);
+  $('#staff-total').text(staffMembers.length);
+}
+
+$('#desigSearch').on('input', function() { renderDesigs($(this).val()); });
+
+$('#addDesigBtn').on('click', () => {
+  editDesigId = null;
+  $('#desigModalTitle').text('Add Designation');
+  $('#desigInput').val('');
+  openModal('#desigModal');
+});
+
+$(document).on('click', '.icon-btn.edit', function() {
+  const id = $(this).data('id');
+  const d = designations.find(x => x.id == id);
+  editDesigId = id;
+  $('#desigModalTitle').text('Edit Designation');
+  $('#desigInput').val(d.name);
+  openModal('#desigModal');
+});
+
+$(document).on('click', '.icon-btn.del', function() {
+  const id = $(this).data('id');
+  const used = staffMembers.some(s => s.desigId === id);
+  if (used) { showToast('Cannot delete — staff assigned to this role', '⚠️'); return; }
+  designations = designations.filter(x => x.id !== id);
+  renderDesigs($('#desigSearch').val());
+  showToast('Designation removed');
+});
+
+$('#saveDesigBtn').on('click', () => {
+  const name = $('#desigInput').val().trim();
+  if (!name) { $('#desigInput').focus(); return; }
+  if (editDesigId) {
+    designations = designations.map(d => d.id == editDesigId ? {...d, name} : d);
+    showToast('Designation updated ✓');
+  } else {
+    const newId = Math.max(...designations.map(d=>d.id), 0) + 1;
+    designations.push({id: newId, name});
+    showToast('Designation added ✓');
+  }
+  closeModal('#desigModal');
+  renderDesigs($('#desigSearch').val());
+  populateDesigSelect();
+});
+
+$('#cancelDesigBtn').on('click', () => closeModal('#desigModal'));
+
+// ── STAFF ──
+function renderStaff(filter='', status='all') {
+  const $list = $('#staff-list').empty();
+  let filtered = staffMembers.filter(s => {
+    const name = (s.first + ' ' + s.last).toLowerCase();
+    const desig = getDesigName(s.desigId).toLowerCase();
+    const matchText = name.includes(filter.toLowerCase()) || desig.includes(filter.toLowerCase());
+    const matchStatus = status==='all' || (status==='active' && s.active) || (status==='inactive' && !s.active);
+    return matchText && matchStatus;
+  });
+  if (!filtered.length) {
+    $list.html('<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">No staff found</div></div>');
+    return;
+  }
+  filtered.forEach((s, i) => {
+    const initials = getInitials(s.first, s.last);
+    const $card = $(`
+      <div class="staff-card" style="animation-delay:${i*50}ms">
+        <div class="staff-avatar">${initials}</div>
+        <div class="staff-info">
+          <div class="staff-name">${s.first} ${s.last}</div>
+          <div class="staff-desig">${getDesigName(s.desigId)} · ${s.contract || '—'}</div>
+          <div class="staff-meta">
+            <span class="staff-id">${s.empId}</span>
+            <span class="badge ${s.active ? 'badge-green' : 'badge-red'}">
+              <span class="dot"></span>${s.active ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+        </div>
+        <div class="staff-card-right">
+          <div class="toggle ${s.active?'on':''}" data-id="${s.id}"></div>
+          <span style="font-size:12px;color:var(--text2);font-weight:600">£${Number(s.rate).toFixed(2)}/h</span>
+        </div>
+      </div>
+    `);
+    $list.append($card);
+  });
+}
+
+$('#staffSearch').on('input', function() { renderStaff($(this).val(), staffFilter); });
+
+$(document).on('click', '#staffChips .chip', function() {
+  $('#staffChips .chip').removeClass('active');
+  $(this).addClass('active');
+  staffFilter = $(this).data('filter');
+  renderStaff($('#staffSearch').val(), staffFilter);
+});
+
+$(document).on('click', '.toggle', function() {
+  const id = $(this).data('id');
+  staffMembers = staffMembers.map(s => s.id == id ? {...s, active: !s.active} : s);
+  const s = staffMembers.find(x => x.id == id);
+  showToast(`${s.first} ${s.last} set to ${s.active ? 'Active' : 'Inactive'}`);
+  renderStaff($('#staffSearch').val(), staffFilter);
+});
+
+// ── ADD STAFF ──
+function populateDesigSelect() {
+  const $sel = $('#staffDesig, #shiftStaff');
+  $sel.filter('#staffDesig').html('<option value="">Select designation</option>' +
+    designations.map(d => `<option value="${d.id}">${d.name}</option>`).join(''));
+  $('#shiftStaff').html(staffMembers.map(s => `<option value="${s.id}">${s.first} ${s.last}</option>`).join(''));
+}
+
+function resetAddForm() {
+  currentStep = 1;
+  $('#addStep1, #addStep2, #addStep3').hide();
+  $('#addStep1').show();
+  updateStepBar(1);
+  $('#staffFirstName,#staffLastName,#staffEmail,#staffPhone,#staffPostcode,#staffHours,#staffRate').val('');
+  $('#staffContract').val('');
+  $('#staffJoinDate').val('');
+  populateDesigSelect();
+}
+
+function updateStepBar(step) {
+  currentStep = step;
+  const labels = ['Personal Info', 'Employment', 'Review'];
+  $('#stepLabel').text(`Step ${step} of 3 — ${labels[step-1]}`);
+  for (let i=1;i<=3;i++) {
+    $('#step'+i).toggleClass('done', i <= step);
+  }
+}
+
+$('#nextStep1Btn').on('click', () => {
+  const first = $('#staffFirstName').val().trim();
+  const last = $('#staffLastName').val().trim();
+  if (!first || !last) { showToast('Please enter first & last name', '⚠️'); return; }
+  $('#addStep1').hide();
+  $('#addStep2').show();
+  updateStepBar(2);
+});
+
+$('#backStep2Btn').on('click', () => {
+  $('#addStep2').hide(); $('#addStep1').show(); updateStepBar(1);
+});
+
+$('#nextStep2Btn').on('click', () => {
+  const desig = $('#staffDesig').val();
+  if (!desig) { showToast('Please select a designation', '⚠️'); return; }
+  // Build review
+  const data = {
+    Name: $('#staffFirstName').val() + ' ' + $('#staffLastName').val(),
+    Email: $('#staffEmail').val() || '—',
+    Phone: $('#staffPhone').val() || '—',
+    Designation: getDesigName(parseInt($('#staffDesig').val())),
+    Contract: $('#staffContract').val() || '—',
+    Hours: $('#staffHours').val() ? $('#staffHours').val() + ' hrs/wk' : '—',
+    Rate: $('#staffRate').val() ? '£' + $('#staffRate').val() + '/hr' : '—',
+    Joining: $('#staffJoinDate').val() || '—',
+  };
+  let html = '';
+  Object.entries(data).forEach(([k,v]) => {
+    html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--text3);font-size:12px">${k}</span>
+      <span style="color:var(--text);font-weight:600;font-size:13px">${v}</span>
+    </div>`;
+  });
+  $('#reviewContent').html(html);
+  $('#addStep2').hide(); $('#addStep3').show(); updateStepBar(3);
+});
+
+$('#backStep3Btn').on('click', () => {
+  $('#addStep3').hide(); $('#addStep2').show(); updateStepBar(2);
+});
+
+$('#submitStaffBtn').on('click', () => {
+  const newId = Math.max(...staffMembers.map(s=>s.id), 0) + 1;
+  const empId = 'EMP' + String(newId).padStart(3,'0');
+  staffMembers.push({
+    id: newId,
+    first: $('#staffFirstName').val().trim(),
+    last: $('#staffLastName').val().trim(),
+    email: $('#staffEmail').val().trim(),
+    phone: $('#staffPhone').val().trim(),
+    desigId: parseInt($('#staffDesig').val()),
+    contract: $('#staffContract').val(),
+    rate: parseFloat($('#staffRate').val()) || 0,
+    joinDate: $('#staffJoinDate').val(),
+    active: true,
+    empId
+  });
+  showToast('Staff member added ✓');
+  renderStaff();
+  showScreen('staff');
+  populateDesigSelect();
+});
+
+// ── ROTA ──
+function buildSampleRota() {
+  staffMembers.forEach(s => {
+    DAYS.forEach((day, di) => {
+      if (Math.random() > 0.3) {
+        const types = ['Morning','Afternoon','Night'];
+        const times = {Morning:['09:00','17:00'], Afternoon:['14:00','22:00'], Night:['22:00','06:00']};
+        const t = types[Math.floor(Math.random()*types.length)];
+        const key = `${s.id}-${di}`;
+        rotaData[key] = { type: t, start: times[t][0], end: times[t][1] };
+      }
+    });
+  });
+}
+
+function renderRota() {
+  const dates = getWeekDates(currentWeekOffset);
+  const first = fmt(dates[0]);
+  const last = fmt(dates[6]);
+  $('#weekLabel').text(`${first} – ${last}`);
+
+  // Head
+  const $head = $('#rotaHead').empty();
+  $head.append('<th>Staff</th>');
+  dates.forEach((d, i) => {
+    $head.append(`<th>${DAYS[i]}<br><span style="font-size:9px;color:var(--text3)">${d.getDate()}/${d.getMonth()+1}</span></th>`);
+  });
+
+  // Body
+  const $body = $('#rotaBody').empty();
+  staffMembers.forEach(s => {
+    const $row = $('<tr>');
+    $row.append(`<td>
+      <div class="rota-staff-cell">
+        <div class="rota-avatar">${getInitials(s.first,s.last)}</div>
+        <div>
+          <div class="rota-name">${s.first}</div>
+          <div class="rota-desig">${getDesigName(s.desigId)}</div>
+        </div>
+      </div>
+    </td>`);
+    DAYS.forEach((_,di) => {
+      const key = `${s.id}-${di}`;
+      const shift = rotaData[key];
+      let content;
+      if (shift) {
+        const isOff = shift.type === 'Off';
+        content = `<div class="shift-badge ${isOff?'off':''}" data-key="${key}" data-sid="${s.id}" data-day="${di}">
+          <span class="shift-time">${shift.start}</span>
+          <span class="shift-type">${shift.type}</span>
+        </div>`;
+      } else {
+        content = `<div class="shift-badge empty" data-add="${s.id}-${di}" data-sid="${s.id}" data-day="${di}">+</div>`;
+      }
+      $row.append(`<td class="shift-cell">${content}</td>`);
+    });
+    $body.append($row);
+  });
+}
+
+$('#prevWeek').on('click', () => { currentWeekOffset--; renderRota(); });
+$('#nextWeek').on('click', () => { currentWeekOffset++; renderRota(); });
+
+$('#staffViewBtn').on('click', function() {
+  $(this).addClass('active'); $('#shiftViewBtn').removeClass('active');
+});
+$('#shiftViewBtn').on('click', function() {
+  $(this).addClass('active'); $('#staffViewBtn').removeClass('active');
+});
+
+$(document).on('click', '.shift-badge.empty', function() {
+  const sid = $(this).data('sid');
+  const day = $(this).data('day');
+  $('#shiftDay').val(DAY_FULL[day]);
+  populateDesigSelect();
+  $('#shiftStaff').val(sid);
+  openModal('#shiftModal');
+  $('#saveShiftBtn').data({sid, day});
+});
+
+$(document).on('click', '.shift-badge:not(.empty)', function() {
+  const key = $(this).data('key');
+  delete rotaData[key];
+  renderRota();
+  showToast('Shift removed');
+});
+
+$('#addShiftBtn').on('click', () => {
+  populateDesigSelect();
+  openModal('#shiftModal');
+  $('#saveShiftBtn').data({sid: null, day: null});
+});
+
+$('#saveShiftBtn').on('click', function() {
+  let sid = $(this).data('sid') || parseInt($('#shiftStaff').val());
+  let day = $(this).data('day');
+  if (day === null || day === undefined) {
+    day = DAY_FULL.indexOf($('#shiftDay').val());
+  }
+  const type = $('input[name="shiftType"]:checked').val();
+  const start = $('#shiftStart').val();
+  const end = $('#shiftEnd').val();
+  rotaData[`${sid}-${day}`] = {type, start, end};
+  closeModal('#shiftModal');
+  renderRota();
+  showToast('Shift assigned ✓');
+});
+
+$('#cancelShiftBtn').on('click', () => closeModal('#shiftModal'));
+
+// ── MODAL HELPERS ──
+function openModal(sel) {
+  $(sel).addClass('open');
+  $('body').css('overflow','hidden');
+}
+function closeModal(sel) {
+  $(sel).removeClass('open');
+  $('body').css('overflow','');
+}
+$('.modal-overlay').on('click', function(e) {
+  if ($(e.target).hasClass('modal-overlay')) closeModal('#' + $(this).attr('id'));
+});
+
+// ── INIT ──
+$(document).ready(() => {
+  renderDesigs();
+  renderStaff();
+  buildSampleRota();
+  renderRota();
+  populateDesigSelect();
+});
+</script>
+</body>
+</html>
